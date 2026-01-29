@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """CDR_Testing.py
 
 Refactored for local execution.
@@ -14,7 +14,7 @@ from nltk.stem import WordNetLemmatizer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import nltk
 
-# Download NLTK data (safe to run multiple times)
+
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -97,7 +97,7 @@ def predict_scam(transcript_text, pipeline):
         return f"Error during prediction: {e}"
 
 if __name__ == "__main__":
-    # Define paths relative to the script location
+    
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATASET_DIR = os.path.join(BASE_DIR, 'Dataset')
     
@@ -129,7 +129,7 @@ if __name__ == "__main__":
             print(f"\nInput: '{test_id}'")
             print(predict_scam(text, loaded_pipeline))
 
-    # --- Model Evaluation Section ---
+    
     print("\n--- Model Evaluation ---")
     CSV_PATH = os.path.join(DATASET_DIR, 'final_scam_calls_dataset_updated.csv')
     
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         df = pd.read_csv(CSV_PATH)
         print(f"Loaded dataset with {len(df)} rows.")
         
-        # Load other models for comparison
+        
         models = {
             'v2': MODEL_PATH_V2,
             'v3': os.path.join(DATASET_DIR, 'fraud_detection_pipeline_v3.joblib'),
@@ -157,7 +157,7 @@ if __name__ == "__main__":
                 print(f"Model {name} not found at {path}")
 
         if loaded_models:
-            # Preprocess dataset for evaluation
+            
             print("Preprocessing dataset...")
             df['cleaned_text'] = df['Transcript_Text'].apply(preprocess_text)
             df['asks_for_otp'] = df['cleaned_text'].apply(lambda x: 1 if 'otp' in x else 0)

@@ -30,7 +30,7 @@ body {
   text-align: center;
 }
 
-/* Utilities */
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
@@ -62,7 +62,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Animations */
+
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }

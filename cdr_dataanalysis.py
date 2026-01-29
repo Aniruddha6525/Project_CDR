@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """CDR_DataAnalysis.py
 
 Refactored for local execution.
@@ -28,7 +28,7 @@ from sklearn.model_selection import GridSearchCV
 import joblib
 from sklearn.pipeline import Pipeline
 
-# Download NLTK data (safe to run multiple times)
+
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -51,7 +51,7 @@ except LookupError:
     nltk.download('punkt_tab')
 
 
-# Define paths
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_DIR = os.path.join(BASE_DIR, 'Dataset')
 CSV_PATH = os.path.join(DATASET_DIR, 'final_scam_calls_dataset_updated.csv')
@@ -126,8 +126,6 @@ def main():
     print("Original vs. Cleaned Text:")
     print(df[['Transcript_Text', 'cleaned_text']].head())
 
-    """**Data Splitting**"""
-
     features = ['cleaned_text', 'asks_for_otp', 'asks_for_email_password', 'asks_to_click_link', 'asks_remote_access', 'uses_urgency','claims_authority', 'has_email', 'has_otp_like_number']
     X = df[features]
     y = df['Label']
@@ -145,7 +143,6 @@ def main():
     print("\nTesting set label distribution:")
     print(y_test.value_counts(normalize=True))
 
-    """*Phase  2*"""
 
     X_train_sample_data = {
         'cleaned_text': [
@@ -189,7 +186,7 @@ def main():
     print("\nSample of the first row (transformed):\n", X_train_transformed[0])
 
 
-    # --- Dummy Model Training ---
+    
     X_train_transformed = csr_matrix([[0.5, 0.8, 0., 1, 0, 1, 1, 0, 1],
                                       [0., 0., 0.9, 0, 1, 0, 0, 1, 0],
                                       [0.2, 0., 0.7, 0, 0, 0, 1, 0, 0]])
@@ -252,7 +249,7 @@ def main():
         plt.show()
 
 
-    # --- Hyperparameter Tuning ---
+    
     X_train_transformed = csr_matrix(np.random.rand(50, 30))
     y_train_dummy = pd.Series(np.random.randint(0, 2, 50))
     X_test_transformed = csr_matrix(np.random.rand(10, 30))
@@ -299,7 +296,7 @@ def main():
     plt.show()
 
 
-    # --- Final Model Training on Full Data ---
+    
     features = ['cleaned_text', 'asks_for_otp', 'asks_for_email_password', 'asks_to_click_link',
                 'asks_remote_access', 'uses_urgency', 'claims_authority', 'has_email', 'has_otp_like_number']
     X_full = df[features]

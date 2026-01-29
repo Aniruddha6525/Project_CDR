@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Evaluate CDR Model V7
 """
@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Define paths
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_DIR = os.path.join(BASE_DIR, 'Dataset')
 CSV_FILE_PATH = os.path.join(DATASET_DIR, 'final_scam_calls_dataset_updated.csv')
@@ -93,7 +93,7 @@ def evaluate():
     df = df.dropna(subset=['audio_path'])
     print(f"Valid samples: {len(df)}")
 
-    # Use the same split as training to ensure we evaluate on Test set
+    
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=42, stratify=df['Label'])
     print(f"Test Set Size: {len(test_df)}")
 
@@ -107,7 +107,7 @@ def evaluate():
     all_labels = []
     all_preds = []
     
-    # Manually iterate to collect all predictions
+    
     print("Collecting predictions...")
     for i in range(steps + 1):
         if i * BATCH_SIZE >= len(test_df): break
@@ -130,7 +130,7 @@ def evaluate():
     print("\nClassification Report:")
     print(classification_report(all_labels, all_preds, target_names=['Legit', 'Fraud']))
 
-    # Plot Confusion Matrix
+    
     cm = confusion_matrix(all_labels, all_preds)
     plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Legit', 'Fraud'], yticklabels=['Legit', 'Fraud'])

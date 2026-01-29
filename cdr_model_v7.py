@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-"""CDR_Model_v7.py
-
-Refactored for local execution.
-Implements the Hybrid Multi-Modal Fraud Detection System (V6).
-"""
-
 import os
-# Suppress TensorFlow oneDNN warnings
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import pandas as pd
@@ -20,11 +12,10 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Define paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_DIR = os.path.join(BASE_DIR, 'Dataset')
 CSV_FILE_PATH = os.path.join(DATASET_DIR, 'final_scam_calls_dataset_updated.csv')
-AUDIO_BASE_PATH = DATASET_DIR # Audio folders are directly inside Dataset/
+AUDIO_BASE_PATH = DATASET_DIR
 MODEL_SAVE_PATH = os.path.join(DATASET_DIR, 'hybrid_audio_text_model_v6.keras')
 
 SAMPLE_RATE = 22050
@@ -49,27 +40,20 @@ def get_valid_audio_path(row):
     folder_name = CATEGORY_FOLDERS.get(category)
 
     if folder_name:
-        # Check for both .mp3 and .wav just in case, though user said mp3
         full_path = os.path.join(AUDIO_BASE_PATH, folder_name, f"{call_id}.mp3")
         if os.path.exists(full_path):
             return full_path
     return None
 
 def augment_audio(y, sr):
-    """
-    Apply random augmentations: Noise, Pitch Shift, Time Stretch.
-    """
-    # 1. Add Noise
     if np.random.random() < 0.5:
         noise_amp = 0.005 * np.random.uniform() * np.amax(y)
         y = y + noise_amp * np.random.normal(size=y.shape)
 
-    # 2. Pitch Shift
     if np.random.random() < 0.5:
         steps = np.random.uniform(-2, 2)
         y = librosa.effects.pitch_shift(y, sr=sr, n_steps=steps)
 
-    # 3. Time Stretch
     if np.random.random() < 0.5:
         rate = np.random.uniform(0.8, 1.2)
         y = librosa.effects.time_stretch(y, rate=rate)
@@ -80,7 +64,6 @@ def load_and_process_audio(audio_path, augment=False):
     try:
         y, sr = librosa.load(audio_path, sr=SAMPLE_RATE, duration=DURATION_SECONDS)
 
-        # Normalize audio to -1 to 1
         y = librosa.util.normalize(y)
         
         if augment:
@@ -93,10 +76,9 @@ def load_and_process_audio(audio_path, augment=False):
 
         spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=N_MELS)
         
-        # Use np.max(spectrogram) but ensure it's not 0 to avoid NaNs
         max_val = np.max(spectrogram)
         if max_val == 0:
-            max_val = 1e-9 # Small epsilon
+            max_val = 1e-9
             
         log_spectrogram = librosa.power_to_db(spectrogram, ref=max_val)
 
@@ -127,35 +109,28 @@ def data_generator(dataframe, batch_size=32, augment=False):
             yield {'audio_input': audio_data, 'text_input': text_input_tensor}, labels
 
 def build_hybrid_model(text_vectorizer, max_tokens):
-    # Simplified Audio Branch
     audio_input = Input(shape=(128, 646, 1), name='audio_input')
     
-    # Block 1
     x = layers.Conv2D(16, (3, 3), activation='relu', padding='same')(audio_input)
     x = layers.MaxPooling2D((2, 2))(x)
     x = layers.BatchNormalization()(x)
 
-    # Block 2
     x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
     x = layers.MaxPooling2D((2, 2))(x)
     x = layers.Dropout(0.3)(x)
 
-    # Block 3
     x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
     x = layers.MaxPooling2D((2, 2))(x)
     
-    # Global Average Pooling instead of Flatten to reduce parameters
     x = layers.GlobalAveragePooling2D()(x)
     audio_features = layers.Dense(32, activation='relu')(x)
 
-    # Simplified Text Branch
     text_input = Input(shape=(1,), dtype=tf.string, name='text_input')
     y = text_vectorizer(text_input)
-    y = layers.Embedding(input_dim=max_tokens, output_dim=64)(y) # Reduced dim
-    y = layers.LSTM(32, return_sequences=False)(y) # Reduced units
+    y = layers.Embedding(input_dim=max_tokens, output_dim=64)(y)
+    y = layers.LSTM(32, return_sequences=False)(y)
     text_features = layers.Dense(32, activation='relu')(y)
 
-    # Combined
     combined = layers.concatenate([audio_features, text_features])
     z = layers.Dense(32, activation='relu')(combined)
     z = layers.Dropout(0.5)(z)
@@ -193,7 +168,6 @@ def main():
 
     print(f"Train: {len(train_df)} | Val: {len(val_df)} | Test: {len(test_df)}")
 
-    # Calculate Class Weights
     from sklearn.utils import class_weight
     class_weights = class_weight.compute_class_weight(
         class_weight='balanced',
@@ -204,7 +178,6 @@ def main():
     print(f"Class Weights: {class_weights_dict}")
 
     BATCH_SIZE = 32
-    # Apply augmentation only to training data
     train_gen = data_generator(train_df, BATCH_SIZE, augment=True)
     val_gen = data_generator(val_df, BATCH_SIZE, augment=False)
     test_gen = data_generator(test_df, BATCH_SIZE, augment=False)
@@ -234,7 +207,7 @@ def main():
                         mode='min',
                         verbose=1),
         EarlyStopping(monitor='val_loss',
-                      patience=10, # Increased patience
+                      patience=10,
                       restore_best_weights=True)
     ]
 
@@ -245,12 +218,11 @@ def main():
             steps_per_epoch=len(train_df) // BATCH_SIZE,
             validation_data=val_gen,
             validation_steps=len(val_df) // BATCH_SIZE,
-            epochs=50, # Increased epochs
+            epochs=50,
             callbacks=callbacks
         )
         print("--- Training Complete ---")
         
-        # Explicitly save the final model (best weights restored)
         print(f"Saving final model to: {MODEL_SAVE_PATH}")
         hybrid_model.save(MODEL_SAVE_PATH)
 
@@ -258,7 +230,7 @@ def main():
         print("\nTraining interrupted by user. Saving current model state...")
         hybrid_model.save(MODEL_SAVE_PATH)
         print(f"Model saved to {MODEL_SAVE_PATH}")
-        return # Exit if interrupted
+        return
 
     if os.path.exists(MODEL_SAVE_PATH):
         print(f"Loading best model from: {MODEL_SAVE_PATH}")
