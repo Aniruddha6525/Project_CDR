@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-tensorflow
+tensorflow-cpu==2.15.0
 librosa
 soundfile
 SpeechRecognition
