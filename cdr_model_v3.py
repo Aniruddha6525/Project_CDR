@@ -1,0 +1,95 @@
+# Dependencies managed in requirements.txt
+
+import pandas as pd
+import joblib
+import string
+import nltk
+
+# from google.colab import drive
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+print("Downloading NLTK resources...")
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+nltk.download('punkt_tab', quiet=True)
+print("Downloads complete.")
+
+# Drive mounting not needed locally
+# print("Mounting Google Drive...")
+# drive.mount('/content/drive')
+# print("Drive mounted successfully.")
+
+file_path = 'Dataset/final_scam_calls_dataset_updated.csv'
+print(f"Loading dataset from: {file_path}")
+try:
+    full_df = pd.read_csv(file_path)
+    print("Dataset loaded successfully!")
+    print(f"Total rows: {len(full_df)}")
+    print("\nVerifying categories...")
+    print(full_df['Category'].value_counts())
+except FileNotFoundError:
+    print("\nERROR: File not found at the specified path.")
+    print("Please make sure the file_path variable is correct and the file exists.")
+
+def preprocess_text(text):
+    if not isinstance(text, str):
+        return ""
+
+    text = text.lower()
+    text = "".join([char for char in text if char not in string.punctuation])
+    tokens = word_tokenize(text)
+
+    stop_words = set(stopwords.words('english'))
+    custom_stopwords = {'hai', 'ka', 'ke', 'kar', 'mein', 'se', 'ko', 'par', 'ho', 'aapka', 'karo', 'kiye'}
+    stop_words.update(custom_stopwords)
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in filtered_tokens]
+
+    return " ".join(lemmatized_tokens)
+
+print("Text preprocessing function defined.")
+
+print("Applying text preprocessing to the dataset...")
+full_df['cleaned_text'] = full_df['Transcript_Text'].apply(preprocess_text)
+print("Preprocessing complete.")
+
+features = [
+    'cleaned_text', 'asks_for_otp', 'asks_for_email_password', 'asks_to_click_link',
+    'asks_remote_access', 'uses_urgency', 'claims_authority', 'has_email', 'has_otp_like_number'
+]
+X_full = full_df[features]
+y_full = full_df['Label']
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('tfidf', TfidfVectorizer(), 'cleaned_text'),
+        ('passthrough_numeric', 'passthrough', [col for col in features if col != 'cleaned_text'])
+    ])
+
+final_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier(random_state=42))
+])
+
+print("Final model pipeline created successfully.")
+print(final_pipeline)
+
+print("-Starting final model training on all data")
+final_pipeline.fit(X_full, y_full)
+print("Final model trained successfully!")
+
+model_save_path = 'Dataset/fraud_detection_pipeline_v3.joblib'
+
+print(f"Saving model pipeline to: {model_save_path}")
+joblib.dump(final_pipeline, model_save_path)
+print("Model saved successfully")
