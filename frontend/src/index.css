@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Geist&family=Geist+Mono&family=Outfit:wght@400;500;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0.098 0.005 260;
+    --foreground: 0.95 0.005 260;
+    --card: 0.12 0.005 260;
+    --card-foreground: 0.95 0.005 260;
+    --popover: 0.11 0.005 260;
+    --popover-foreground: 0.95 0.005 260;
+    --primary: 0.72 0.19 165;
+    --primary-foreground: 0.098 0.005 260;
+    --secondary: 0.18 0.005 260;
+    --secondary-foreground: 0.8 0.005 260;
+    --muted: 0.18 0.005 260;
+    --muted-foreground: 0.55 0.01 260;
+    --accent: 0.75 0.16 55;
+    --accent-foreground: 0.098 0.005 260;
+    --destructive: 0.62 0.24 25;
+    --destructive-foreground: 0.95 0 0;
+    --border: 0.22 0.005 260;
+    --input: 0.18 0.005 260;
+    --ring: 0.72 0.19 165;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'Geist', sans-serif;
+  }
+}
+
+/* Subtle ambient glow for background */
+@keyframes ambient-shift {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    opacity: 0.6;
+    transform: translate(10px, -20px) scale(1.05);
+  }
+
+  66% {
+    opacity: 0.3;
+    transform: translate(-15px, 10px) scale(0.95);
+  }
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes shimmer-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes waveform-bar {
+
+  0%,
+  100% {
+    transform: scaleY(0.2);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Smooth scroll for all */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar matching Android Liquid Glass */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.005 260);
+  border-radius: 999px;
+}

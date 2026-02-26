@@ -1,0 +1,109 @@
+# Dependencies are managed in requirements.txt
+
+import pandas as pd
+import joblib
+import string
+import nltk
+
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+print("Downloading NLTK resources...")
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+nltk.download('punkt_tab', quiet=True)
+nltk.download('vader_lexicon', quiet=True)
+print("Downloads complete.")
+
+file_path = 'Dataset/final_scam_calls_dataset_updated.csv'
+print(f"Loading dataset from: {file_path}")
+try:
+    full_df = pd.read_csv(file_path)
+    print("Dataset loaded successfully!")
+    print(f"Total rows: {len(full_df)}")
+    print("\nVerifying categories...")
+    print(full_df['Category'].value_counts())
+except FileNotFoundError:
+    print("\nERROR: File not found at the specified path.")
+    print("Please make sure the file_path variable is correct and the file exists.")
+except Exception as e:
+    print(f"An error occurred while loading the dataset: {e}")
+
+import string
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+def preprocess_text(text):
+    if not isinstance(text, str):
+        return ""
+
+    text = text.lower()
+    text = "".join([char for char in text if char not in string.punctuation])
+    tokens = word_tokenize(text)
+
+    stop_words = set(stopwords.words('english'))
+    custom_stopwords = {'hai', 'ka', 'ke', 'kar', 'mein', 'se', 'ko', 'par', 'ho', 'aapka', 'karo', 'kiye'}
+    stop_words.update(custom_stopwords)
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in filtered_tokens]
+
+    return " ".join(lemmatized_tokens)
+
+def get_sentiment_score(text):
+    if not isinstance(text, str):
+        return 0.0
+    analyzer = SentimentIntensityAnalyzer()
+    sentiment_dict = analyzer.polarity_scores(text)
+    return sentiment_dict['compound']
+
+print("Text preprocessing and sentiment analysis functions defined.")
+
+print("Applying text preprocessing and calculating sentiment scores...")
+full_df['cleaned_text'] = full_df['Transcript_Text'].apply(preprocess_text)
+full_df['sentiment_score'] = full_df['Transcript_Text'].apply(get_sentiment_score)
+print("Preprocessing and sentiment score calculation complete.")
+
+numerical_features = [
+    'sentiment_score', 'asks_for_otp', 'asks_for_email_password', 'asks_to_click_link',
+    'asks_remote_access', 'uses_urgency', 'claims_authority', 'has_email', 'has_otp_like_number'
+]
+text_feature = 'cleaned_text'
+all_features = numerical_features + [text_feature]
+
+X_full = full_df[all_features]
+y_full = full_df['Label']
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('tfidf', TfidfVectorizer(ngram_range=(1, 2)), text_feature),
+        ('passthrough_numeric', 'passthrough', numerical_features)
+    ])
+
+final_pipeline_v5 = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier(random_state=42))
+])
+
+print("Preprocessing and pipeline defined.")
+
+print("\n--- Training final model with Advanced Features (v5)... ---")
+final_pipeline_v5.fit(X_full, y_full)
+print("--- Advanced model (v5) trained successfully! ✅ ---")
+
+model_save_path = 'Dataset/fraud_detection_pipeline_v5.joblib'
+
+print(f"\nSaving advanced model (v5) to: {model_save_path}")
+joblib.dump(final_pipeline_v5, model_save_path)
+print("Advanced model (v5) saved successfully!")

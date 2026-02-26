@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SafeLine</string>
+    <string name="title_activity_main">SafeLine</string>
+    <string name="package_name">com.nemo.safeline</string>
+    <string name="custom_url_scheme">com.nemo.safeline</string>
+</resources>
