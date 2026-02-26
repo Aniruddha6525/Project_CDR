@@ -1,4 +1,5 @@
 import os
+import json
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Suppress oneDNN custom operations logs
 
 import shutil
@@ -55,8 +56,20 @@ except Exception as e:
 FILE_SCAM_MAP = {}
 
 def load_scam_types():
-    """Scans the Dataset directory to map filenames to scam types."""
+    """Scans the Dataset directory to map filenames to scam types, or loads from JSON."""
+    global FILE_SCAM_MAP
     print("Loading scam types...")
+    
+    mapping_file = 'scam_mapping.json'
+    if os.path.exists(mapping_file):
+        try:
+            with open(mapping_file, 'r') as f:
+                FILE_SCAM_MAP.update(json.load(f))
+            print(f"Loaded {len(FILE_SCAM_MAP)} file-to-scam mappings from {mapping_file}.")
+            return
+        except Exception as e:
+            print(f"Error loading {mapping_file}: {e}")
+
     count = 0
     if os.path.exists(DATASET_DIR):
         for root, dirs, files in os.walk(DATASET_DIR):
@@ -64,10 +77,10 @@ def load_scam_types():
             if folder_name == "Dataset": continue
             
             for file in files:
-                if file.lower().endswith('.mp3'):
+                if file.lower().endswith(('.mp3', '.wav')):
                     FILE_SCAM_MAP[file] = folder_name
                     count += 1
-    print(f"Loaded {count} file-to-scam mappings.")
+    print(f"Loaded {count} file-to-scam mappings via directory scan.")
 
 # Load scam types on startup
 load_scam_types()

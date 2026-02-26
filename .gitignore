@@ -34,6 +34,8 @@ venv.bak/
 # Databases
 *.db
 *.sqlite3
+!Backend/fingerprints.db
+!Backend/scam_mapping.json
 
 # Temporary/Uploads
 temp_uploads/
@@ -54,4 +56,4 @@ ehthumbs.db
 Thumbs.db
 
 # Large Datasets
-Dataset/
+Dataset/Data/
